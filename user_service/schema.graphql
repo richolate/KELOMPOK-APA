@@ -1,0 +1,19 @@
+type Query {
+  ping: String!
+  users: [User!]!
+}
+
+type Mutation {
+  addUser(name: String!, email: String!, phone: String, address: String): User!
+  editUser(id: ID!, name: String!, email: String!, phone: String, address: String): User
+  deleteUser(id: ID!): User
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  phone: String
+  address: String
+  created_at: String
+}

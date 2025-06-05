@@ -1,0 +1,60 @@
+version: "3.8"
+
+services:
+  # Frontend Service
+  frontend:
+    build: ./frontend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - user_service
+
+   # User Service (pakai SQLite)
+  user_service:
+    build: ./user_service
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./user_service:/app
+
+  # Vendor Service (pakai SQLite)
+  vendor_service:
+    build: ./vendor_service
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./vendor_service:/app
+
+  # Product Service (pakai SQLite)
+  product_service:
+    build: ./product_service
+    ports:
+      - "8003:8003"
+    volumes:
+      - ./product_service:/app
+
+  # Order Service (pakai SQLite)
+  order_service:
+    build: ./order_service
+    ports:
+      - "8004:8004"
+    volumes:
+      - ./order_service:/app
+
+  # Payment Service (pakai SQLite)
+  payment_service:
+    build: ./payment_service
+    ports:
+      - "8005:8005"
+    volumes:
+      - ./payment_service:/app
+
+
+# volumes:
+#   user_data:
+#   vendor_data:
+#   product_data:
+#   order_data:
+#   payment_data:
