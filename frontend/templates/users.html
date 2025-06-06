@@ -1,225 +1,287 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Management</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-</head>
-<body>
-    <!-- Navigation -->
-    <nav class="nav">
-        <div class="nav-container">
-            <a href="#" class="nav-brand">Admin Dashboard</a>
-            <ul class="nav-links">
-                <li><a href="#" onclick="handleLogout()">Logout</a></li>
-            </ul>
-        </div>
-    </nav>
+{% extends "layout.html" %}
 
-    <div class="container">
-        <!-- Add User Form -->
-        <div class="add-user-form">
-            <h3 class="form-title">Add New User</h3>
+{% block title %}User Management{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Add User Form -->
+    <div class="add-user-form card shadow-sm mb-4">
+        <div class="card-body">
+            <h3 class="card-title mb-4">Add New User</h3>
             <form id="addUserForm" onsubmit="return handleAddUser(event)">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="username">Username</label>
-                        <input type="text" id="username" name="username" required>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
                     </div>
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" name="email" required>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="phone">Phone</label>
-                        <input type="text" id="phone" name="phone" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="address">Address</label>
-                        <input type="text" id="address" name="address" required>
+                    <div class="col-md-6 mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
                     </div>
                 </div>
-                <button type="submit" class="btn">Add User</button>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="phone" class="form-label">Phone</label>
+                        <input type="text" class="form-control" id="phone" name="phone" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="address" class="form-label">Address</label>
+                        <input type="text" class="form-control" id="address" name="address" required>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Add User
+                    </button>
+                </div>
             </form>
         </div>
-
-        <!-- Users Table -->
-        <table class="users-table">
-            <thead>
-                <tr>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Address</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="usersTableBody"></tbody>
-        </table>
     </div>
 
-    <script>
-        if (localStorage.getItem('isLoggedIn') !== 'true') {
-            window.location.href = 'index.html';
-        }
+    <!-- Users Table -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h3 class="card-title mb-4">User List</h3>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Address</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-        function handleLogout() {
-            localStorage.removeItem('isLoggedIn');
-            window.location.href = 'index.html';
-        }
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-edit me-2"></i>Edit User
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUserForm">
+                        <input type="hidden" id="editUserId">
+                        <div class="mb-3">
+                            <label for="editUsername" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="editUsername" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editPhone" class="form-label">Phone</label>
+                            <input type="text" class="form-control" id="editPhone">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editAddress" class="form-label">Address</label>
+                            <input type="text" class="form-control" id="editAddress">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="handleEditUserSubmit()">
+                        <i class="fas fa-save me-2"></i>Update
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
 
-        async function handleAddUser(event) {
-            event.preventDefault();
+{% block extra_js %}
+<script>
+    // Cek login menggunakan cookie
+    if (!document.cookie.includes('is_logged_in=true')) {
+        window.location.href = '/login.html';
+    }
 
-            const username = document.getElementById('username').value;
-            const email = document.getElementById('email').value;
-            const phone = document.getElementById('phone').value;
-            const address = document.getElementById('address').value;
+    async function handleAddUser(event) {
+        event.preventDefault();
 
-            const mutation = `
-                mutation {
-                    addUser(name: "${username}", email: "${email}", phone: "${phone}", address: "${address}") {
-                        id
-                        name
-                        email
-                        phone
-                        address
-                    }
+        const username = document.getElementById('username').value;
+        const email = document.getElementById('email').value;
+        const phone = document.getElementById('phone').value;
+        const address = document.getElementById('address').value;
+
+        const mutation = `
+            mutation {
+                addUser(name: "${username}", email: "${email}", phone: "${phone}", address: "${address}") {
+                    id
+                    name
+                    email
+                    phone
+                    address
                 }
-            `;
-
-            try {
-                const response = await fetch("http://localhost:8001/graphql", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ query: mutation })
-                });
-
-                const result = await response.json();
-                if (result.data && result.data.addUser) {
-                    event.target.reset();
-                    displayUsers();
-                } else {
-                    alert('Failed to add user');
-                }
-            } catch (err) {
-                console.error("Failed to add user:", err);
             }
+        `;
 
-            return false;
-        }
+        try {
+            const response = await fetch("http://localhost:8001/graphql", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ query: mutation })
+            });
 
-        async function displayUsers() {
-            const query = `
-                query {
-                    users {
-                        id
-                        name
-                        email
-                        phone
-                        address
-                    }
-                }
-            `;
-
-            try {
-                const response = await fetch("http://localhost:8001/graphql", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ query })
-                });
-
-                const result = await response.json();
-                if (result.data && result.data.users) {
-                    const users = result.data.users;
-                    const tbody = document.getElementById('usersTableBody');
-                    tbody.innerHTML = '';
-
-                    users.forEach((user) => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${user.name}</td>
-                            <td>${user.email}</td>
-                            <td>${user.phone || '-'}</td>
-                            <td>${user.address || '-'}</td>
-                            <td>
-                                <button onclick="handleEditUser('${user.id}')">Edit</button>
-                                <button onclick="handleDeleteUser('${user.id}')">Delete</button>
-                            </td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
-                }
-            } catch (err) {
-                console.error("Failed to fetch users:", err);
+            const result = await response.json();
+            if (result.data && result.data.addUser) {
+                event.target.reset();
+                displayUsers();
+            } else {
+                alert('Failed to add user');
             }
+        } catch (err) {
+            console.error("Failed to add user:", err);
         }
+    }
 
-        async function handleDeleteUser(userId) {
-            const mutation = `
-                mutation {
-                    deleteUser(id: "${userId}") {
-                        id
-                    }
+    async function displayUsers() {
+        const query = `
+            query {
+                users {
+                    id
+                    name
+                    email
+                    phone
+                    address
                 }
-            `;
-
-            try {
-                const response = await fetch("http://localhost:8001/graphql", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ query: mutation })
-                });
-
-                const result = await response.json();
-                if (result.data && result.data.deleteUser) {
-                    displayUsers();
-                }
-            } catch (err) {
-                console.error("Failed to delete user:", err);
             }
-        }
+        `;
 
-        async function handleEditUser(userId) {
-            const name = prompt("Enter new name:");
-            const email = prompt("Enter new email:");
-            const phone = prompt("Enter new phone:");
-            const address = prompt("Enter new address:");
+        try {
+            const response = await fetch("http://localhost:8001/graphql", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ query })
+            });
 
-            if (!name || !email) return;
+            const result = await response.json();
+            if (result.data && result.data.users) {
+                const tbody = document.getElementById('usersTableBody');
+                tbody.innerHTML = '';
 
-            const mutation = `
-                mutation {
-                    editUser(id: "${userId}", name: "${name}", email: "${email}", phone: "${phone}", address: "${address}") {
-                        id
-                        name
-                        email
-                        phone
-                        address
-                    }
-                }
-            `;
-
-            try {
-                const response = await fetch("http://localhost:8001/graphql", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ query: mutation })
+                result.data.users.forEach((user) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td>${user.phone || '-'}</td>
+                        <td>${user.address || '-'}</td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" 
+                                        onclick="handleEditUser('${user.id}', '${user.name}', '${user.email}', '${user.phone || ''}', '${user.address || ''}')"
+                                        title="Edit User">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" 
+                                        onclick="handleDeleteUser('${user.id}')"
+                                        title="Delete User">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
                 });
-
-                const result = await response.json();
-                if (result.data && result.data.editUser) {
-                    displayUsers();
-                }
-            } catch (err) {
-                console.error("Failed to update user:", err);
             }
+        } catch (err) {
+            console.error("Failed to fetch users:", err);
+        }
+    }
+
+    async function handleDeleteUser(userId) {
+        if (!confirm('Are you sure you want to delete this user?')) {
+            return;
         }
 
-        displayUsers();
-    </script>
-</body>
-</html>
+        const mutation = `
+            mutation {
+                deleteUser(id: "${userId}") {
+                    id
+                }
+            }
+        `;
+
+        try {
+            const response = await fetch("http://localhost:8001/graphql", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ query: mutation })
+            });
+
+            const result = await response.json();
+            if (result.data && result.data.deleteUser) {
+                displayUsers();
+            }
+        } catch (err) {
+            console.error("Failed to delete user:", err);
+        }
+    }
+
+    function handleEditUser(userId, name, email, phone, address) {
+        document.getElementById('editUserId').value = userId;
+        document.getElementById('editUsername').value = name;
+        document.getElementById('editEmail').value = email;
+        document.getElementById('editPhone').value = phone;
+        document.getElementById('editAddress').value = address;
+        
+        const modal = new bootstrap.Modal(document.getElementById('editModal'));
+        modal.show();
+    }
+
+    async function handleEditUserSubmit() {
+        const userId = document.getElementById('editUserId').value;
+        const name = document.getElementById('editUsername').value;
+        const email = document.getElementById('editEmail').value;
+        const phone = document.getElementById('editPhone').value;
+        const address = document.getElementById('editAddress').value;
+
+        const mutation = `
+            mutation {
+                editUser(id: "${userId}", name: "${name}", email: "${email}", phone: "${phone}", address: "${address}") {
+                    id
+                    name
+                    email
+                    phone
+                    address
+                }
+            }
+        `;
+
+        try {
+            const response = await fetch("http://localhost:8001/graphql", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ query: mutation })
+            });
+
+            const result = await response.json();
+            if (result.data && result.data.editUser) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
+                modal.hide();
+                displayUsers();
+            }
+        } catch (err) {
+            console.error("Failed to update user:", err);
+        }
+    }
+
+    displayUsers();
+</script>
+{% endblock %}

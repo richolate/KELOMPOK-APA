@@ -1,26 +1,17 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-import os
+from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 app = FastAPI()
 
-# Mount static files
+# Static and template
 app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
 
-@app.get("/")
-@app.get("/index.html")
-async def read_root():
-    return FileResponse('templates/index.html')
-
-@app.get("/users")
-@app.get("/users.html")
-async def read_users():
-    return FileResponse('templates/users.html')
-
-# Add CORS middleware
-from fastapi.middleware.cors import CORSMiddleware
-
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -28,3 +19,27 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/")
+@app.get("/login.html")
+async def login(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+@app.get("/do_login")
+async def do_login():
+    response = RedirectResponse(url="/users")
+    response.set_cookie("is_logged_in", "true")
+    return response
+
+@app.get("/logout")
+async def logout():
+    response = RedirectResponse(url="/login.html")
+    response.delete_cookie("is_logged_in")  # penting: hapus cookie login
+    return response
+
+@app.get("/users")
+@app.get("/users.html")
+async def users_page(request: Request):
+    if request.cookies.get("is_logged_in") != "true":
+        return RedirectResponse(url="/login.html")
+    return templates.TemplateResponse("users.html", {"request": request})
