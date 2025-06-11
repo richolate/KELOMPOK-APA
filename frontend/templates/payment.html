@@ -1,0 +1,141 @@
+{% extends "layout.html" %}
+{% block title %}Payment Management{% endblock %}
+
+{% block content %}
+<div class="container">
+  <!-- Add Payment Form -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <h3 class="card-title mb-4">Add New Payment</h3>
+      <form id="addPaymentForm" onsubmit="return handleAddPayment(event)">
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label for="order_id" class="form-label">Order ID</label>
+            <input type="number" class="form-control" id="order_id" required>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label for="payment_method" class="form-label">Payment Method</label>
+            <select class="form-select" id="payment_method" required>
+              <option value="Cash">Cash</option>
+              <option value="Credit Cards">Credit Cards</option>
+              <option value="Debit Cards">Debit Cards</option>
+              <option value="Bank Transfers">Bank Transfers</option>
+            </select>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label for="amount" class="form-label">Amount</label>
+            <input type="number" class="form-control" id="amount" required>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="payment_status" class="form-label">Status</label>
+            <select class="form-select" id="payment_status" required>
+              <option value="pending">Pending</option>
+              <option value="paid">Paid</option>
+              <option value="failed">Failed</option>
+              <option value="expired">Expired</option>
+            </select>
+          </div>
+        </div>
+        <div class="text-end">
+          <button type="submit" class="btn btn-success">
+            <i class="fas fa-plus me-2"></i>Add Payment
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Payments Table -->
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h3 class="card-title mb-4">Payment List</h3>
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>Order ID</th>
+              <th>Method</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Transaction ID</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="paymentsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+if (!document.cookie.includes('is_logged_in=true')) {
+  window.location.href = '/login.html';
+}
+
+function formatRupiah(value) {
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value);
+}
+
+async function handleAddPayment(event) {
+  event.preventDefault();
+  const order_id = parseInt(document.getElementById('order_id').value);
+  const payment_method = document.getElementById('payment_method').value;
+  const amount = parseFloat(document.getElementById('amount').value);
+  const payment_status = document.getElementById('payment_status').value;
+
+  const mutation = `
+    mutation {
+      addPayment(order_id: ${order_id}, payment_method: "${payment_method}", amount: ${amount},
+                 payment_status: "${payment_status}", transaction_id: "AUTO") {
+        id order_id payment_method amount payment_status transaction_id payment_date
+      }
+    }
+  `;
+
+  await fetch("http://localhost:8004/graphql", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query: mutation })
+  });
+
+  event.target.reset();
+  loadPayments();
+}
+
+async function loadPayments() {
+  const query = `query { payments {
+    order_id payment_method amount payment_status transaction_id payment_date
+  }}`;
+
+  const res = await fetch("http://localhost:8004/graphql", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query })
+  });
+
+  const result = await res.json();
+  const tbody = document.getElementById('paymentsTableBody');
+  tbody.innerHTML = "";
+
+  result.data.payments.forEach(p => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${p.order_id}</td>
+      <td>${p.payment_method}</td>
+      <td>${formatRupiah(p.amount)}</td>
+      <td>${p.payment_status}</td>
+      <td>${p.transaction_id}</td>
+      <td>${p.payment_date}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+loadPayments();
+</script>
+{% endblock %}
