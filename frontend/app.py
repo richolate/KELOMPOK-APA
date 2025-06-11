@@ -43,3 +43,13 @@ async def users_page(request: Request):
     if request.cookies.get("is_logged_in") != "true":
         return RedirectResponse(url="/login.html")
     return templates.TemplateResponse("users.html", {"request": request})
+
+@app.get("/payment")
+async def payment_page(request: Request):
+    if request.cookies.get("is_logged_in") != "true":
+        return RedirectResponse(url="/login.html")
+    return templates.TemplateResponse("payment.html", {"request": request})
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)

@@ -1,0 +1,23 @@
+type Payment {
+    id: ID!
+    order_id: Int!
+    payment_method: String
+    amount: Float
+    payment_status: String
+    transaction_id: String
+    payment_date: String
+}
+
+type Query {
+    payments: [Payment!]!
+}
+
+type Mutation {
+    addPayment(
+        order_id: Int!,
+        payment_method: String!,
+        amount: Float!,
+        payment_status: String!,
+        transaction_id: String
+    ): Payment!
+}
