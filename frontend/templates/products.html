@@ -1,0 +1,175 @@
+{% extends "layout.html" %}
+
+{% block title %}Product Management{% endblock %}
+
+{% block content %}
+<div class="container mt">
+  <h2 class="mb-4">Manage Products</h2>
+
+  <!-- Raw Materials Table -->
+  <div class="card shadow mb-4">
+    <div class="card-header bg-secondary text-white">
+      <h4 class="mb-0">Raw Materials</h4>
+    </div>
+    <div class="card-body">
+      <table class="table table-striped">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th>Livestock Type</th>
+            <th>Quantity</th>
+            <th>Received At</th>
+          </tr>
+        </thead>
+        <tbody id="rawMaterialList"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Add Product Form -->
+  <div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">Add Product</h4>
+    </div>
+    <div class="card-body">
+      <form id="addProductForm" class="row g-3">
+        <div class="col-md-4">
+          <select id="rawMaterialId" class="form-select" required>
+            <option value="">Select Raw Material</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <input type="text" class="form-control" id="productName" placeholder="Product Name" required />
+        </div>
+        <div class="col-md-2">
+          <input type="text" class="form-control" id="productUnit" placeholder="Unit (e.g. pack)" />
+        </div>
+        <div class="col-md-2">
+          <input type="number" class="form-control" id="productQty" placeholder="Qty" required />
+        </div>
+        <div class="col-md-1">
+          <button type="submit" class="btn btn-success w-100">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Product List Table -->
+  <div class="card shadow">
+    <div class="card-header bg-info text-white">
+      <h4 class="mb-0">Products</h4>
+    </div>
+    <div class="card-body">
+      <table class="table table-hover">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th>Product</th>
+            <th>Unit</th>
+            <th>Quantity</th>
+            <!-- <th>Created</th> -->
+          </tr>
+        </thead>
+        <tbody id="productList"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const API_URL = "http://localhost:8003/graphql";
+
+  async function fetchGraphQL(query, variables = {}) {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, variables })
+    });
+    return res.json();
+  }
+
+  async function loadRawMaterials() {
+    const query = `query { rawMaterials { id livestock_type quantity received_at } }`;
+    const data = await fetchGraphQL(query);
+    const list = document.getElementById("rawMaterialList");
+    const select = document.getElementById("rawMaterialId");
+    list.innerHTML = "";
+    select.innerHTML = "<option value=''>Select Raw Material</option>";
+    data.data.rawMaterials.forEach((m, i) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${m.livestock_type}</td>
+        <td>${m.quantity}</td>
+        <td>${m.received_at}</td>
+      `;
+      list.appendChild(tr);
+
+      const opt = document.createElement("option");
+      opt.value = m.id;
+      opt.textContent = `#${m.id} - ${m.livestock_type}`;
+      select.appendChild(opt);
+    });
+  }
+
+  async function loadProducts() {
+    const query = `
+      query {
+        products {
+          id
+          name
+          unit
+          quantity
+          created_at
+        }
+      }
+    `;
+    const data = await fetchGraphQL(query);
+    const list = document.getElementById("productList");
+    list.innerHTML = "";
+    data.data.products.forEach((p, i) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${p.name}</td>
+        <td>${p.unit || '-'}</td>
+        <td>${p.quantity}</td>
+        
+      `;
+      list.appendChild(tr);
+    });
+  }
+
+  document.getElementById("addProductForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const raw_material_id = parseInt(document.getElementById("rawMaterialId").value);
+    const name = document.getElementById("productName").value.trim();
+    const unit = document.getElementById("productUnit").value.trim();
+    const quantity = parseInt(document.getElementById("productQty").value);
+
+    const mutation = `
+      mutation($raw_material_id: Int!, $name: String!, $unit: String, $quantity: Int!) {
+        addProduct(raw_material_id: $raw_material_id, name: $name, unit: $unit, quantity: $quantity) {
+          id
+        }
+      }
+    `;
+
+    const result = await fetchGraphQL(mutation, { raw_material_id, name, unit, quantity });
+
+    if (result.errors) {
+      alert("Failed to add product: " + result.errors[0].message);
+    } else {
+      document.getElementById("addProductForm").reset();
+      loadProducts();
+    }
+  });
+
+  loadRawMaterials();
+  loadProducts();
+</script>
+{% endblock %}
