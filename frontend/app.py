@@ -50,6 +50,23 @@ async def payment_page(request: Request):
         return RedirectResponse(url="/login.html")
     return templates.TemplateResponse("payment.html", {"request": request})
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
+@app.get("/vendor")
+@app.get("/vendors")
+@app.get("/vendors.html")
+async def vendors_page(request: Request):
+    if request.cookies.get("is_logged_in") != "true":
+        return RedirectResponse(url="/login.html")
+    return templates.TemplateResponse("vendors.html", {"request": request})
+
+@app.get("/products")
+@app.get("/products.html")
+async def products_page(request: Request):
+    if request.cookies.get("is_logged_in") != "true":
+        return RedirectResponse(url="/login.html")
+    return templates.TemplateResponse("products.html", {"request": request})
+
+
+
+# if __name__ == "__main__":
+#     import uvicorn
+#     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)

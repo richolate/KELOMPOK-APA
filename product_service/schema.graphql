@@ -1,0 +1,26 @@
+type Query {
+  rawMaterials: [RawMaterial!]!
+  products: [Product!]!
+}
+
+type Mutation {
+  addRawMaterial(vendor_transaction_id: Int, livestock_type: String!, quantity: Int!): RawMaterial!
+  addProduct(raw_material_id: Int!, name: String!, unit: String, quantity: Int!): Product!
+}
+
+type RawMaterial {
+  id: ID!
+  vendor_transaction_id: Int
+  livestock_type: String!
+  quantity: Int!
+  received_at: String!
+}
+
+type Product {
+  id: ID!
+  raw_material_id: Int
+  name: String!
+  unit: String
+  quantity: Int!
+  created_at: String!
+}

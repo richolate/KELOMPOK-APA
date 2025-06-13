@@ -1,0 +1,31 @@
+type Query {
+  orders: [Order!]!
+  orderItems(order_id: ID!): [OrderItem!]!
+}
+
+type Mutation {
+  createOrder(user_id: Int!, items: [OrderInput!]!): Order!
+  updateOrderStatus(order_id: ID!, status: String!): Order!
+}
+
+input OrderInput {
+  product_id: Int!
+  quantity: Int!
+  price: Float!
+}
+
+type Order {
+  id: ID!
+  user_id: Int!
+  order_date: String!
+  total_amount: Float!
+  status: String!
+}
+
+type OrderItem {
+  id: ID!
+  order_id: ID!
+  product_id: Int!
+  quantity: Int!
+  price: Float!
+}
