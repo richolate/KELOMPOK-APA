@@ -10,6 +10,10 @@ services:
       - ./frontend:/app
     depends_on:
       - user_service
+      - vendor_service
+      - product_service
+      - order_service
+      - payment_service
 
    # User Service (pakai SQLite)
   user_service:
@@ -50,11 +54,3 @@ services:
       - "8005:8005"
     volumes:
       - ./payment_service:/app
-
-
-# volumes:
-#   user_data:
-#   vendor_data:
-#   product_data:
-#   order_data:
-#   payment_data:
